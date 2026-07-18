@@ -1,10 +1,11 @@
 # Third-party notices
 
-This repository's own original code is released into the public domain under
-[The Unlicense](LICENSE). That dedication applies **only** to code written for
+This repository's own original code is licensed under
+[CC BY-NC 4.0](LICENSE). That license applies **only** to code written for
 this project. It does **not** and cannot relicense the third-party components
-listed below, which remain under their own original licenses as reproduced
-here.
+listed below, which remain under their own original (permissive) licenses as
+reproduced here - Creative Commons's non-commercial/attribution terms are not
+imposed on them.
 
 Two of these components are vendored directly into this repository (their
 source and/or compiled binaries are committed here, not just referenced as

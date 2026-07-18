@@ -1,5 +1,7 @@
 # LLM Studio
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
 A voice-first Android chat client for a self-hosted [llama.cpp](https://github.com/ggml-org/llama.cpp)
 server, reached over your local network (or a VPN tunnel such as WireGuard). Speak to it, hear it
 speak back, and keep everything running on hardware you control.
@@ -56,9 +58,10 @@ speak back, and keep everything running on hardware you control.
 
 ## License
 
-This project's own code is released into the public domain under
-[The Unlicense](LICENSE) - use it for anything, including commercially, with
-no attribution required.
+This project's own code is licensed under
+[CC BY-NC 4.0](LICENSE) (Creative Commons Attribution-NonCommercial 4.0
+International): you're free to use, share, and adapt it, but you must credit
+LinuxKernel44 and you may not use it for commercial purposes.
 
 A few components are vendored in or downloaded at runtime under their own
 (permissive, Apache-2.0/MIT) licenses and keep those terms regardless of the
