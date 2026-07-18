@@ -47,9 +47,6 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
     private var ready = false
 
     @Volatile
-    private var language = "en"
-
-    @Volatile
     private var continuousMode = false
 
     @Volatile
@@ -79,7 +76,11 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
                     whisper = OfflineWhisperModelConfig(
                         encoder = WhisperModelManager.encoderFile(appContext).absolutePath,
                         decoder = WhisperModelManager.decoderFile(appContext).absolutePath,
-                        language = language,
+                        // Empty = auto-detect the spoken language per utterance. Forcing a language
+                        // (e.g. "en") makes Whisper transcribe French audio AS English, producing a
+                        // rough English translation. Auto-detect handles FR and EN transparently and
+                        // avoids having to rebuild the decoder when the user switches languages.
+                        language = "",
                         task = "transcribe",
                         tailPaddings = 1000,
                     ),
@@ -114,26 +115,17 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
     override fun isReady() = ready
 
     override fun setRecognitionLocale(locale: Locale) {
-        language = locale.language.ifEmpty { "en" } // Whisper wants a 2-letter code, e.g. "en"/"fr".
-        applyLanguage()
+        // No-op: the recognizer runs in auto-detect mode (see loadModels), so it transcribes
+        // whatever language is actually spoken - the app's language setting doesn't need to be
+        // forced onto Whisper, which avoids the "French spoken -> English text" problem.
     }
 
     override fun setContinuousMode(continuous: Boolean) {
         continuousMode = continuous
     }
 
-    /** Pushes the current [language] into the live recognizer (no-op until it's loaded). */
-    private fun applyLanguage() {
-        val rec = recognizer ?: return
-        val cfg = rec.config
-        if (cfg.modelConfig.whisper.language != language) {
-            cfg.modelConfig.whisper.language = language
-            rec.setConfig(cfg)
-        }
-    }
-
     override fun startListening() {
-        Log.d(TAG, "startListening: ready=$ready capturing=$capturing continuous=$continuousMode lang=$language")
+        Log.d(TAG, "startListening: ready=$ready capturing=$capturing continuous=$continuousMode")
         if (!ready) {
             post { callback.onError("Speech-to-text model is still loading…") }
             return
@@ -141,7 +133,6 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
         if (capturing) {
             return
         }
-        applyLanguage()
         cancelled = false
         capturing = true
         val continuous = continuousMode
