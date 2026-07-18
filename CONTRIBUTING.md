@@ -19,6 +19,11 @@ llama.cpp server setup, the better.
    ./gradlew assembleDebug
    ```
 
+Release builds (`assembleRelease`) are unsigned unless you provide your own
+keystore: copy `keystore.properties.example` to `keystore.properties` (already
+git-ignored) and point it at a keystore you generate yourself with
+`keytool -genkeypair`. Not needed for day-to-day debug development.
+
 The project targets `compileSdk 37` / `minSdk 27` and uses the Gradle
 toolchain pinned to JDK 21.
 
