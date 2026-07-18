@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="status_success">#2E7D32</color>
+
+    <!-- AMOLED Purple theme: pure black surfaces (true OLED power savings) with a purple accent. -->
+    <color name="amoled_background">#FF000000</color>
+    <color name="amoled_surface_variant">#FF1B1B1F</color>
+    <color name="amoled_on_surface">#FFF3EDFF</color>
+    <color name="amoled_outline">#FF7A6B99</color>
+
+    <color name="amoled_primary">#FFBB86FC</color>
+    <color name="amoled_on_primary">#FF381E72</color>
+    <color name="amoled_primary_container">#FF4F1F91</color>
+    <color name="amoled_on_primary_container">#FFEEDBFF</color>
+
+    <color name="amoled_secondary_container">#FF3A2E52</color>
+    <color name="amoled_on_secondary_container">#FFE6DEFF</color>
+
+    <color name="amoled_tertiary_container">#FF5C2E7E</color>
+    <color name="amoled_on_tertiary_container">#FFFCE8FF</color>
+
+    <color name="amoled_error_container">#FF93000A</color>
+    <color name="amoled_on_error_container">#FFFFDAD6</color>
+</resources>

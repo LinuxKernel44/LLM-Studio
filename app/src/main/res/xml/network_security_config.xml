@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows plaintext HTTP, which Android 9+ blocks by default. The backend is a self-hosted
+  llama-server reached only over a private WireGuard tunnel (e.g. http://10.0.0.1:8081), so
+  cleartext is intentional here. The endpoint IP/host is user-configurable in Settings, so this
+  permits cleartext generally rather than pinning a single address.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

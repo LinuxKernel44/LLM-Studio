@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="4dp">
+
+    <!-- width=0dp + constraintWidth_percent caps the bubble at 80% of the row, while
+         constraintWidth_max="wrap" lets it shrink to fit short replies instead of always
+         filling that 80%. constraintHorizontal_bias=0 keeps it pinned to the start. -->
+    <TextView
+        android:id="@+id/textMessageBody"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bubble_assistant_background"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSecondaryContainer"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="wrap"
+        app:layout_constraintWidth_percent="0.8"
+        tools:text="It's sunny and 22 degrees today." />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

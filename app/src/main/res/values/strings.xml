@@ -1,0 +1,108 @@
+<resources>
+    <string name="app_name">LLM Studio</string>
+    <string name="settings_title">Settings</string>
+
+    <string name="status_idle">Tap the mic to speak</string>
+    <string name="status_idle_tap">Tap to start · tap to stop</string>
+    <string name="status_idle_hold">Hold to talk</string>
+    <string name="status_listening">Listening…</string>
+    <string name="status_processing">Thinking…</string>
+    <string name="status_speaking">Speaking…</string>
+    <string name="status_thinking">…</string>
+
+    <string name="hint_message_input">Type a message instead</string>
+    <string name="action_send">Send</string>
+    <string name="action_settings">Settings</string>
+    <string name="cd_mic_button">Microphone button</string>
+    <string name="cd_open_drawer">Open conversations</string>
+    <string name="cd_back">Back</string>
+
+    <string name="permission_mic_rationale">Microphone access is needed to hear what you say and turn it into text.</string>
+    <string name="permission_mic_denied">Microphone permission was denied. Enable it in system settings to use voice input.</string>
+
+    <string name="settings_endpoint_label">Backend URL</string>
+    <string name="settings_endpoint_hint">http://10.0.0.1:8081/v1/chat/completions</string>
+    <string name="settings_model_label">Model name (optional)</string>
+    <string name="settings_model_hint">Leave blank to let the server pick</string>
+    <string name="settings_system_prompt_label">System prompt</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_saved">Settings saved</string>
+    <string name="settings_clear_history">Clear conversation history</string>
+    <string name="settings_endpoint_error">Enter a valid http:// or https:// URL</string>
+
+    <string name="settings_test_connection">Test connection</string>
+    <string name="settings_testing_connection">Testing…</string>
+    <string name="settings_test_success_no_models">Connected</string>
+    <string name="settings_test_success_with_models">Connected — %1$d model(s) found</string>
+    <string name="settings_select_model">Choose model…</string>
+    <string name="settings_select_model_title">Select a model</string>
+    <string name="settings_select_model_empty">No models returned by the server. Test the connection first, or type a model name manually.</string>
+    <string name="settings_select_model_fetching">Fetching model list…</string>
+
+    <string name="settings_input_mode_label">Microphone mode</string>
+    <string name="settings_input_mode_ptt">Push to talk (hold the mic)</string>
+    <string name="settings_input_mode_continuous">Hands-free (continuous listening)</string>
+
+    <string name="settings_theme_label">App theme</string>
+    <string name="settings_theme_dynamic">Material You (dynamic color)</string>
+    <string name="settings_theme_amoled">AMOLED black &amp; purple</string>
+    <string name="settings_theme_glass">Liquid Glass</string>
+    <string name="settings_theme_oled_glass">Oled Liquid Glass</string>
+
+    <string name="settings_resume_conversation_label">Resume last conversation on launch</string>
+    <string name="settings_resume_conversation_description">When off, every app restart begins a brand-new conversation (old ones stay available in the drawer).</string>
+
+    <string name="settings_voice_language_label">Voice language</string>
+    <string name="settings_voice_language_description">Used for speech recognition and spoken replies only - the app\'s own text always stays in English.</string>
+    <string name="settings_voice_language_en">English (US)</string>
+    <string name="settings_voice_language_fr">Français</string>
+    <string name="settings_on_device_unavailable">⚠ This phone doesn\'t expose a guaranteed on-device recognizer (Android 13+ only). Voice input falls back to the system\'s default recognizer, which may use the cloud.</string>
+    <string name="settings_voice_model_installed">✓ Installed offline: %1$s</string>
+    <string name="settings_voice_model_missing">⚠ Not installed offline. These voice models are managed by the system speech service and are separate from your keyboard/system language packs — tap the button below to download it.</string>
+    <string name="settings_voice_model_pending">⏳ Download in progress: %1$s</string>
+    <string name="settings_voice_model_checking">Checking installed voice models…</string>
+    <string name="settings_download_voice_model">Download voice model for selected language</string>
+    <string name="settings_download_started">Download requested — approve it if the system asks, then re-open Settings to check.</string>
+    <string name="settings_download_progress">Downloading voice model… %1$d%%</string>
+    <string name="settings_download_done">Voice model downloaded and ready.</string>
+
+    <string name="settings_speech_rate_label">Speech speed: %1$.1fx</string>
+
+    <string name="settings_tts_engine_label">TTS engine</string>
+    <string name="settings_tts_engine_description">Kokoro is a local neural voice model - fully offline, English only. French always uses the system engine below.</string>
+    <string name="settings_tts_engine_system">System (native, works for both languages)</string>
+    <string name="settings_tts_engine_kokoro">Kokoro (local neural voice, English only)</string>
+    <string name="settings_kokoro_voice_label">Kokoro voice</string>
+    <string name="settings_download_kokoro_model">Download Kokoro voice model (~320 MB)</string>
+    <string name="settings_kokoro_not_downloaded">Not downloaded yet - select a voice and tap the button above once it\'s ready.</string>
+    <string name="settings_kokoro_ready">✓ Downloaded and ready to use offline.</string>
+    <string name="settings_kokoro_downloading">Downloading… %1$d%%</string>
+    <string name="settings_kokoro_extracting">Extracting… this can take a minute or two, please wait.</string>
+    <string name="settings_kokoro_download_done">Kokoro voice model downloaded and ready.</string>
+    <string name="settings_kokoro_french_unavailable">Kokoro only has English voices - switch the voice language above to English (US) to use it.</string>
+
+    <string name="settings_profile_label">Server profile</string>
+    <string name="settings_profile_new">New profile</string>
+    <string name="settings_profile_rename">Rename profile</string>
+    <string name="settings_profile_delete">Delete profile</string>
+    <string name="settings_profile_delete_last_error">You need at least one profile.</string>
+    <string name="settings_profile_new_name_hint">Profile name</string>
+    <string name="settings_profile_new_title">New profile</string>
+    <string name="settings_profile_rename_title">Rename profile</string>
+    <string name="settings_profile_delete_title">Delete profile?</string>
+    <string name="settings_profile_delete_message">"Delete \"%1$s\"? This only removes the connection profile, not any conversations."</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+
+    <string name="drawer_new_chat">New chat</string>
+    <string name="drawer_delete_all_chats">Delete all conversations</string>
+    <string name="drawer_delete_all_chats_title">Delete all conversations?</string>
+    <string name="drawer_delete_all_chats_message">This deletes every saved conversation and can\'t be undone. A new empty conversation will be started.</string>
+    <string name="cd_conversation_options">Conversation options</string>
+    <string name="conversation_menu_rename">Rename</string>
+    <string name="conversation_menu_delete">Delete</string>
+    <string name="conversation_rename_title">Rename conversation</string>
+    <string name="conversation_delete_title">Delete conversation?</string>
+    <string name="conversation_delete_message">"Delete \"%1$s\"? This can\'t be undone."</string>
+</resources>

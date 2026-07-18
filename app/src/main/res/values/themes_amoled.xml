@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Fixed (non-DayNight) AMOLED theme: always dark, pure black background/surface for real OLED
+      power savings, purple primary. Applied at runtime instead of Material You dynamic color when
+      the user picks it in Settings - see ThemeUtils.
+    -->
+    <style name="Theme.LLMStudio.Amoled" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowBackground">@color/amoled_background</item>
+        <item name="android:colorBackground">@color/amoled_background</item>
+
+        <item name="colorSurface">@color/amoled_background</item>
+        <item name="colorOnSurface">@color/amoled_on_surface</item>
+        <item name="colorSurfaceVariant">@color/amoled_surface_variant</item>
+        <item name="colorOutline">@color/amoled_outline</item>
+
+        <item name="colorPrimary">@color/amoled_primary</item>
+        <item name="colorOnPrimary">@color/amoled_on_primary</item>
+        <item name="colorPrimaryContainer">@color/amoled_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/amoled_on_primary_container</item>
+
+        <item name="colorSecondaryContainer">@color/amoled_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/amoled_on_secondary_container</item>
+
+        <item name="colorTertiaryContainer">@color/amoled_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/amoled_on_tertiary_container</item>
+
+        <item name="colorErrorContainer">@color/amoled_error_container</item>
+        <item name="colorOnErrorContainer">@color/amoled_on_error_container</item>
+    </style>
+</resources>
