@@ -1,6 +1,9 @@
 # LLM Studio
 
+[![Build](https://github.com/LinuxKernel44/LLM-Studio/actions/workflows/build.yml/badge.svg)](https://github.com/LinuxKernel44/LLM-Studio/actions/workflows/build.yml)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+![Platform](https://img.shields.io/badge/platform-Android-3DDC84.svg)
+![minSdk](https://img.shields.io/badge/minSdk-27-blue.svg)
 
 A voice-first Android chat client for a self-hosted [llama.cpp](https://github.com/ggml-org/llama.cpp)
 server, reached over your local network (or a VPN tunnel such as WireGuard). Speak to it, hear it
@@ -55,6 +58,34 @@ speak back, and keep everything running on hardware you control.
    for the strongest offline guarantees).
 4. In the app's Settings, set the backend URL to your llama-server instance, e.g.
    `http://<server-ip>:8081/v1/chat/completions`.
+
+## Backend (llama.cpp server)
+
+The app is a client only - it needs an OpenAI-compatible `/v1/chat/completions`
+endpoint to talk to. Any [llama.cpp](https://github.com/ggml-org/llama.cpp)
+`llama-server` build works. Minimal example:
+
+```
+llama-server --model your-model.gguf --host 0.0.0.0 --port 8081 --jinja
+```
+
+- `--host 0.0.0.0` makes it reachable from other devices on your network (not
+  just `localhost`); the phone then connects to `http://<server-ip>:8081/...`.
+- Over the internet, don't expose the port directly - reach your machine
+  through a VPN tunnel such as WireGuard and point the app at the tunnel IP.
+- The app can list the models a server has loaded (Settings → Test connection),
+  so you don't have to type a model name by hand.
+
+## Notes
+
+- **Native ABIs**: the optional Kokoro local-TTS engine ships prebuilt
+  `sherpa-onnx` / ONNX Runtime native libraries for `arm64-v8a` and
+  `armeabi-v7a` only. The rest of the app runs on any ABI (including x86/x86_64
+  emulators), but Kokoro TTS is unavailable there - the system TTS engine is
+  used as usual.
+- **Cleartext HTTP** is permitted by the network security config so the app can
+  reach a plain-HTTP `llama-server` on your LAN/VPN; there's no cloud service
+  involved.
 
 ## License
 

@@ -1,0 +1,16 @@
+# Normalize line endings: store text as LF in the repo, check out LF everywhere.
+* text=auto eol=lf
+
+# Windows-only scripts must stay CRLF to run correctly.
+*.bat text eol=crlf
+
+# Treat known binaries as binary (never touch their bytes / line endings).
+*.jar   binary
+*.so    binary
+*.webp  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gguf  binary
+*.bin   binary
+*.keep  text

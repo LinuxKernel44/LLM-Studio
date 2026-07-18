@@ -77,6 +77,10 @@ public class StreamingChatClient {
 
         EventSourceListener sseListener = new EventSourceListener() {
             private boolean startedStreaming = false;
+            // Guards every terminal callback (onComplete/onError) so exactly one fires per stream.
+            // All okhttp-sse callbacks arrive serialized on the same dispatcher thread, so a plain
+            // boolean is sufficient here (no synchronization needed).
+            private boolean finished = false;
 
             @Override
             public void onOpen(@NonNull EventSource eventSource, @NonNull Response response) {
@@ -86,9 +90,12 @@ public class StreamingChatClient {
             @Override
             public void onEvent(@NonNull EventSource eventSource, @Nullable String id,
                                  @Nullable String type, @NonNull String data) {
+                if (finished) {
+                    return;
+                }
                 // llama-server (like OpenAI) terminates the stream with a literal "[DONE]" event.
                 if ("[DONE]".equals(data.trim())) {
-                    listener.onComplete();
+                    complete();
                     return;
                 }
                 try {
@@ -107,14 +114,29 @@ public class StreamingChatClient {
 
             @Override
             public void onClosed(@NonNull EventSource eventSource) {
+                // The server closes the connection immediately after the "[DONE]" event, so without
+                // the `finished` guard onComplete() would fire a SECOND time here - re-flushing the
+                // reply's trailing text to the TTS engine and speaking the end of the answer twice.
                 if (startedStreaming) {
-                    listener.onComplete();
+                    complete();
                 }
             }
 
             @Override
             public void onFailure(@NonNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+                if (finished) {
+                    return;
+                }
+                finished = true;
                 listener.onError(describeFailure(t, response));
+            }
+
+            private void complete() {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                listener.onComplete();
             }
         };
 

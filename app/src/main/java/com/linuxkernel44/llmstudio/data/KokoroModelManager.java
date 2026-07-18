@@ -34,6 +34,11 @@ public class KokoroModelManager {
             "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2";
     private static final String MODEL_DIR_NAME = "kokoro-en-v0_19";
 
+    // The archive (~320 MB) and its extracted contents (~380 MB) briefly coexist on disk during
+    // extraction, so require a bit of headroom above their combined peak before starting - failing
+    // fast with a clear message beats a cryptic IOException part-way through a long download.
+    private static final long REQUIRED_FREE_BYTES = 800L * 1024 * 1024;
+
     /** In display order, matching sid 0..10 as documented by sherpa-onnx for this model. */
     public static final String[] VOICE_NAMES = {
             "af", "af_bella", "af_nicole", "af_sarah", "af_sky",
@@ -76,6 +81,15 @@ public class KokoroModelManager {
         executor.execute(() -> {
             File targetDir = modelDir(appContext);
             File archiveFile = new File(appContext.getCacheDir(), "kokoro-en-v0_19.tar.bz2");
+            long freeBytes = appContext.getFilesDir().getUsableSpace();
+            if (freeBytes < REQUIRED_FREE_BYTES) {
+                long freeMb = freeBytes / (1024 * 1024);
+                long neededMb = REQUIRED_FREE_BYTES / (1024 * 1024);
+                mainHandler.post(() -> callback.onError(
+                        "Not enough free storage to install the voice model (need ~" + neededMb
+                                + " MB, only " + freeMb + " MB free). Free up some space and try again."));
+                return;
+            }
             try {
                 downloadFile(archiveFile, callback);
                 mainHandler.post(callback::onExtracting);
