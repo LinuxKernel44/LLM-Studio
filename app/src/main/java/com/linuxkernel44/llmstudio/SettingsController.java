@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.linuxkernel44.llmstudio.data.KokoroModelManager;
+import com.linuxkernel44.llmstudio.data.WhisperModelManager;
 import com.linuxkernel44.llmstudio.data.ProfileEntity;
 import com.linuxkernel44.llmstudio.data.SettingsManager;
 import com.linuxkernel44.llmstudio.databinding.ActivitySettingsBinding;
@@ -51,6 +52,7 @@ public class SettingsController {
     private VoiceModelHelper voiceModelHelper;
     private final KokoroModelManager kokoroModelManager = new KokoroModelManager();
     private int selectedKokoroSpeakerId;
+    private final WhisperModelManager whisperModelManager = new WhisperModelManager();
 
     private int appliedThemeMode;
 
@@ -86,6 +88,7 @@ public class SettingsController {
                 binding.textSpeechRateLabel.setText(activity.getString(R.string.settings_speech_rate_label, value)));
 
         setupKokoroControls();
+        setupWhisperControls();
 
         int themeRadioId;
         if (appliedThemeMode == SettingsManager.THEME_MODE_AMOLED) {
@@ -319,6 +322,56 @@ public class SettingsController {
     }
 
     // ---------------------------------------------------------------------------------------------
+    // Whisper local neural speech-to-text: multilingual (FR + EN), so no per-language gating like
+    // Kokoro. ChatViewModel falls back to the system recognizer if the model isn't downloaded.
+    // ---------------------------------------------------------------------------------------------
+
+    private void setupWhisperControls() {
+        binding.groupSttEngine.check(settingsManager.isUseWhisperStt() ? R.id.radioSttWhisper : R.id.radioSttSystem);
+        binding.buttonDownloadWhisper.setOnClickListener(v -> downloadWhisperModel());
+        refreshWhisperAvailability();
+    }
+
+    private void refreshWhisperAvailability() {
+        if (WhisperModelManager.isModelReady(activity)) {
+            binding.textWhisperStatus.setText(R.string.settings_whisper_ready);
+            binding.buttonDownloadWhisper.setVisibility(View.GONE);
+        } else {
+            binding.textWhisperStatus.setText(R.string.settings_whisper_not_downloaded);
+            binding.buttonDownloadWhisper.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void downloadWhisperModel() {
+        binding.buttonDownloadWhisper.setEnabled(false);
+        whisperModelManager.download(activity, new WhisperModelManager.DownloadCallback() {
+            @Override
+            public void onProgress(int percent) {
+                binding.textWhisperStatus.setText(activity.getString(R.string.settings_whisper_downloading, percent));
+            }
+
+            @Override
+            public void onExtracting() {
+                binding.textWhisperStatus.setText(R.string.settings_whisper_extracting);
+            }
+
+            @Override
+            public void onCompleted() {
+                binding.buttonDownloadWhisper.setEnabled(true);
+                binding.textWhisperStatus.setText(R.string.settings_whisper_download_done);
+                binding.buttonDownloadWhisper.setVisibility(View.GONE);
+                Snackbar.make(binding.getRoot(), R.string.settings_whisper_download_done, Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String message) {
+                binding.buttonDownloadWhisper.setEnabled(true);
+                binding.textWhisperStatus.setText(message);
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------------------------------------
     // Profile management: a dropdown of all profiles, plus new/rename/delete, all backed by Room.
     // ---------------------------------------------------------------------------------------------
 
@@ -473,6 +526,7 @@ public class SettingsController {
         settingsManager.setSpeechRate(voiceLanguageTag, binding.sliderSpeechRate.getValue());
         settingsManager.setUseKokoroTts(binding.groupTtsEngine.getCheckedRadioButtonId() == R.id.radioTtsKokoro);
         settingsManager.setKokoroSpeakerId(selectedKokoroSpeakerId);
+        settingsManager.setUseWhisperStt(binding.groupSttEngine.getCheckedRadioButtonId() == R.id.radioSttWhisper);
 
         int selectedRadioId = binding.groupTheme.getCheckedRadioButtonId();
         int newThemeMode;

@@ -18,9 +18,12 @@ else is a normal Gradle dependency, listed for attribution only.
 
 ### sherpa-onnx
 
-- **What's vendored:** `app/src/main/kotlin/com/k2fsa/sherpa/onnx/Tts.kt` (the
-  Kotlin API wrapper, copied verbatim) and the prebuilt native libraries under
-  `app/src/main/jniLibs/*/libsherpa-onnx-*.so`.
+- **What's vendored:** the Kotlin API wrapper files under
+  `app/src/main/kotlin/com/k2fsa/sherpa/onnx/` (copied verbatim from tag
+  v1.13.4: `Tts.kt` for text-to-speech, and `OfflineRecognizer.kt`,
+  `OfflineStream.kt`, `FeatureConfig.kt`, `HomophoneReplacerConfig.kt`,
+  `QnnConfig.kt`, `Vad.kt` for speech-to-text), plus the prebuilt native
+  libraries under `app/src/main/jniLibs/*/libsherpa-onnx-*.so`.
 - **Project:** https://github.com/k2-fsa/sherpa-onnx
 - **Copyright:** Copyright (c) 2023 Xiaomi Corporation
 - **License:** Apache License, Version 2.0 (full text below)
@@ -54,13 +57,18 @@ Gradle dependency. Listed here for attribution.
 
 ## Runtime-downloaded model (not bundled, not vendored)
 
-The optional local Kokoro-82M text-to-speech voice model
-(https://huggingface.co/hexgrad/Kokoro-82M) is **not** included in this
-repository. If the user enables it in Settings, the app downloads it at
-runtime from sherpa-onnx's GitHub release
-(`kokoro-en-v0_19.tar.bz2`) to the device's private storage. The model itself
-is released under the Apache License 2.0 and its license card notes it is
-suitable for commercial use; nothing about it is redistributed here.
+Two optional local models are **not** included in this repository; if the user
+enables them in Settings, the app downloads them at runtime to the device's
+private storage. Nothing about them is redistributed here.
+
+- The **Kokoro-82M** text-to-speech voice model
+  (https://huggingface.co/hexgrad/Kokoro-82M), fetched from sherpa-onnx's
+  GitHub release (`kokoro-en-v0_19.tar.bz2`). Released under the Apache License
+  2.0; its model card notes it is suitable for commercial use.
+- The **Whisper** (base, multilingual) speech-to-text model and the **Silero
+  VAD** model, fetched from sherpa-onnx's GitHub release
+  (`sherpa-onnx-whisper-base.tar.bz2`, `silero_vad.onnx`). OpenAI Whisper is
+  released under the MIT License; Silero VAD under the MIT License.
 
 ---
 

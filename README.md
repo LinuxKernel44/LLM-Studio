@@ -11,8 +11,8 @@ speak back, and keep everything running on hardware you control.
 
 ## Features
 
-- **Voice conversations**: on-device speech recognition (guaranteed offline where supported by the
-  device) and text-to-speech, in push-to-talk or hands-free continuous-listening mode.
+- **Voice conversations**: on-device speech recognition and text-to-speech, in push-to-talk or
+  hands-free continuous-listening mode.
 - **Streaming replies** over an OpenAI-compatible `/v1/chat/completions` endpoint (SSE), spoken
   sentence-by-sentence as the reply streams in rather than waiting for the full response.
 - **Multi-conversation history** with a Claude-style side drawer: rename, delete, or start a new
@@ -29,6 +29,11 @@ speak back, and keep everything running on hardware you control.
   model (via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)), downloadable in-app, running
   fully on-device with a selectable voice - English only for now, with the system TTS engine
   automatically used for French.
+- **Local neural speech-to-text**: an optional [Whisper](https://github.com/openai/whisper) model
+  (base, multilingual, via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) with Silero VAD for
+  hands-free endpointing), downloadable in-app, running fully on-device - more accurate than the
+  system recognizer for both French and English. Switchable back to the system recognizer in
+  Settings.
 
 ## Architecture
 

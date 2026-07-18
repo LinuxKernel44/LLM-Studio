@@ -19,6 +19,7 @@ public class SettingsManager {
     private static final String KEY_SPEECH_RATE_PREFIX = "speech_rate_";
     private static final String KEY_USE_KOKORO_TTS = "use_kokoro_tts";
     private static final String KEY_KOKORO_SPEAKER_ID = "kokoro_speaker_id";
+    private static final String KEY_USE_WHISPER_STT = "use_whisper_stt";
 
     public static final String DEFAULT_PROFILE_NAME = "Default";
     public static final String DEFAULT_ENDPOINT_URL = "http://10.0.0.1:8081/v1/chat/completions";
@@ -154,6 +155,15 @@ public class SettingsManager {
 
     public void setUseKokoroTts(boolean enabled) {
         prefs.edit().putBoolean(KEY_USE_KOKORO_TTS, enabled).apply();
+    }
+
+    /** true = local Whisper on-device speech-to-text; false = the system SpeechRecognizer. */
+    public boolean isUseWhisperStt() {
+        return prefs.getBoolean(KEY_USE_WHISPER_STT, false);
+    }
+
+    public void setUseWhisperStt(boolean enabled) {
+        prefs.edit().putBoolean(KEY_USE_WHISPER_STT, enabled).apply();
     }
 
     /** Index into KokoroModelManager.VOICE_NAMES (0..10 for Kokoro-en-v0_19). */

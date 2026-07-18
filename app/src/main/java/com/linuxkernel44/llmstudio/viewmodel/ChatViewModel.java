@@ -14,13 +14,16 @@ import androidx.lifecycle.Transformations;
 import com.linuxkernel44.llmstudio.data.ChatMessageEntity;
 import com.linuxkernel44.llmstudio.data.ConversationEntity;
 import com.linuxkernel44.llmstudio.data.KokoroModelManager;
+import com.linuxkernel44.llmstudio.data.WhisperModelManager;
 import com.linuxkernel44.llmstudio.repository.ChatRepository;
 import com.linuxkernel44.llmstudio.repository.ConversationRepository;
 import com.linuxkernel44.llmstudio.repository.ProfileRepository;
 import com.linuxkernel44.llmstudio.speech.KokoroTtsEngine;
 import com.linuxkernel44.llmstudio.speech.SpeechToTextHelper;
+import com.linuxkernel44.llmstudio.speech.SttEngine;
 import com.linuxkernel44.llmstudio.speech.TextToSpeechHelper;
 import com.linuxkernel44.llmstudio.speech.TtsEngine;
+import com.linuxkernel44.llmstudio.speech.WhisperSttEngine;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +42,11 @@ public class ChatViewModel extends AndroidViewModel {
     private final ChatRepository repository;
     private final ConversationRepository conversationRepository;
     private final ProfileRepository profileRepository;
-    private final SpeechToTextHelper speechToTextHelper;
+    private final SpeechToTextHelper systemStt;
+    private final SttEngine.Callback sttCallback;
+    private WhisperSttEngine whisperStt; // lazily created only if/when the user selects it
+    private SttEngine activeStt;
+    private Locale currentVoiceLocale = Locale.forLanguageTag("en-US");
     private final TextToSpeechHelper systemTts;
     private final TtsEngine.Callback ttsCallback;
     private KokoroTtsEngine kokoroTts; // lazily created only if/when the user selects it
@@ -107,35 +114,39 @@ public class ChatViewModel extends AndroidViewModel {
         profileRepository.ensureActiveProfile(profileId -> { /* just needs to exist before the first send */ });
         conversationRepository.resolveStartupConversation(currentConversationId::postValue);
 
-        speechToTextHelper = new SpeechToTextHelper(application, new SpeechToTextHelper.Callback() {
+        // Shared by whichever STT engine is active (system or Whisper), so switching engines never
+        // needs to touch this wiring - both drive the exact same SttEngine.Callback.
+        sttCallback = new SttEngine.Callback() {
             @Override
             public void onListeningStarted() {
-                micState.setValue(MicState.LISTENING);
+                micState.postValue(MicState.LISTENING);
             }
 
             @Override
             public void onPartialResult(String partialText) {
-                partialTranscript.setValue(partialText);
+                partialTranscript.postValue(partialText);
             }
 
             @Override
             public void onFinalResult(String finalText) {
-                partialTranscript.setValue("");
+                partialTranscript.postValue("");
                 sendMessage(finalText);
             }
 
             @Override
             public void onError(String message) {
-                partialTranscript.setValue("");
+                partialTranscript.postValue("");
                 if (continuousActive) {
                     // Silence / no-match during a hands-free loop: quietly keep listening.
                     restartListening();
                 } else {
-                    micState.setValue(MicState.IDLE);
-                    errorEvent.setValue(message);
+                    micState.postValue(MicState.IDLE);
+                    errorEvent.postValue(message);
                 }
             }
-        });
+        };
+        systemStt = new SpeechToTextHelper(application, sttCallback);
+        activeStt = systemStt;
 
         // Shared by whichever engine is active (system or Kokoro) - switching engines never needs
         // to touch this wiring, since both implementations drive the exact same TtsEngine.Callback.
@@ -208,7 +219,7 @@ public class ChatViewModel extends AndroidViewModel {
         // A conversation switch always cancels any hands-free loop, since it was listening/speaking
         // in the context of the conversation being left.
         continuousActive = false;
-        speechToTextHelper.cancel();
+        activeStt.cancel();
         micState.setValue(MicState.IDLE);
         conversationRepository.setActiveConversation(conversationId);
         currentConversationId.setValue(conversationId);
@@ -240,8 +251,33 @@ public class ChatViewModel extends AndroidViewModel {
 
     /** Applied to both the recognizer and the active TTS engine - the app's own UI text stays English. */
     public void setVoiceLanguage(Locale locale) {
-        speechToTextHelper.setRecognitionLocale(locale);
+        currentVoiceLocale = locale;
+        activeStt.setRecognitionLocale(locale);
         activeTts.setLanguage(locale);
+    }
+
+    /**
+     * Switches the active speech-to-text backend. useWhisper is ignored (falls back to the system
+     * recognizer) if the Whisper model hasn't been downloaded yet - see WhisperModelManager /
+     * SettingsController for the download flow. The newly-selected engine inherits the current voice
+     * language and input mode so a mid-session switch stays consistent.
+     */
+    public void setSttEngine(boolean useWhisper) {
+        SttEngine target = systemStt;
+        if (useWhisper && WhisperModelManager.isModelReady(getApplication())) {
+            if (whisperStt == null) {
+                whisperStt = new WhisperSttEngine(getApplication(), sttCallback);
+            }
+            target = whisperStt;
+        }
+        if (activeStt != target) {
+            // cancel() delivers no result, so switching away mid-listen can't fire a stray
+            // onFinalResult/onError from the outgoing engine once it's no longer active.
+            activeStt.cancel();
+            activeStt = target;
+            activeStt.setRecognitionLocale(currentVoiceLocale);
+            activeStt.setContinuousMode(continuousMode);
+        }
     }
 
     /** 1.0 = normal TTS speed; no-op on engines that don't support rate control. */
@@ -278,7 +314,8 @@ public class ChatViewModel extends AndroidViewModel {
         // Mode changed while the screen was away: abort anything in flight and reset to a clean idle.
         this.continuousMode = continuous;
         continuousActive = false;
-        speechToTextHelper.cancel();
+        activeStt.setContinuousMode(continuous);
+        activeStt.cancel();
         activeTts.stop();
         repository.cancelActiveStream();
         micState.setValue(MicState.IDLE);
@@ -291,14 +328,27 @@ public class ChatViewModel extends AndroidViewModel {
     /** Mic pressed and held: interrupt anything playing/streaming and start a listening session. */
     public void onPushToTalkStart() {
         interruptOngoing();
-        speechToTextHelper.startListening();
+        startListeningNow();
+    }
+
+    /**
+     * Starts a listening session, first telling the engine whether this session is continuous
+     * (self-endpointing) or push-to-talk (ended by stopListening). continuousActive is the reliable
+     * signal for that - it's true exactly during the hands-free loop - so the active engine (notably
+     * WhisperSttEngine, which needs it to decide VAD vs wait-for-release) always gets the right mode
+     * regardless of whether the host screen wired setContinuousMode.
+     */
+    private void startListeningNow() {
+        activeStt.setContinuousMode(continuousActive);
+        activeStt.startListening();
     }
 
     /** Mic released: finalize the current utterance, which auto-sends via onFinalResult. */
     public void onPushToTalkStop() {
-        if (micState.getValue() == MicState.LISTENING) {
-            speechToTextHelper.stopListening();
-        }
+        // Called unconditionally (not gated on LISTENING): onListeningStarted can lag a fast
+        // press-release, and a no-op stop is harmless for the system recognizer while it's what
+        // ends WhisperSttEngine's capture thread - gating on state could otherwise leave it running.
+        activeStt.stopListening();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -310,12 +360,12 @@ public class ChatViewModel extends AndroidViewModel {
         if (continuousActive) {
             continuousActive = false;
             interruptOngoing();
-            speechToTextHelper.cancel();
+            activeStt.cancel();
             micState.setValue(MicState.IDLE);
         } else {
             continuousActive = true;
             interruptOngoing();
-            speechToTextHelper.startListening();
+            startListeningNow();
         }
     }
 
@@ -450,7 +500,7 @@ public class ChatViewModel extends AndroidViewModel {
 
     /** Starts a new listening session on the main thread (safe from any calling thread). */
     private void restartListening() {
-        mainHandler.post(speechToTextHelper::startListening);
+        mainHandler.post(this::startListeningNow);
     }
 
     @Override
@@ -459,7 +509,10 @@ public class ChatViewModel extends AndroidViewModel {
         conversations.removeObserver(conversationListWatcher);
         continuousActive = false;
         repository.cancelActiveStream();
-        speechToTextHelper.destroy();
+        systemStt.destroy();
+        if (whisperStt != null) {
+            whisperStt.destroy();
+        }
         systemTts.shutdown();
         if (kokoroTts != null) {
             kokoroTts.shutdown();

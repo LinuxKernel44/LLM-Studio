@@ -137,6 +137,9 @@ public class MainActivity extends AppCompatActivity {
         boolean wantsKokoro = settingsManager.isUseKokoroTts()
                 && SettingsManager.VOICE_LANGUAGE_ENGLISH_US.equals(settingsManager.getVoiceLanguageTag());
         viewModel.setTtsEngine(wantsKokoro, settingsManager.getKokoroSpeakerId());
+        // Whisper is multilingual (FR + EN), so no per-language gating like Kokoro; falls back to the
+        // system recognizer automatically if the model isn't downloaded yet.
+        viewModel.setSttEngine(settingsManager.isUseWhisperStt());
     }
 
     /**

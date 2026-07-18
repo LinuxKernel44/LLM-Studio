@@ -28,3 +28,4 @@ keystore.properties
 *.pem
 *.env
 google-services.json
+/app/release/

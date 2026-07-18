@@ -182,6 +182,8 @@ private fun GlassChatScreen(
         val wantsKokoro = settingsManager.isUseKokoroTts &&
             SettingsManager.VOICE_LANGUAGE_ENGLISH_US == settingsManager.voiceLanguageTag
         viewModel.setTtsEngine(wantsKokoro, settingsManager.kokoroSpeakerId)
+        // Whisper is multilingual (FR + EN); falls back to the system recognizer if not downloaded.
+        viewModel.setSttEngine(settingsManager.isUseWhisperStt)
     }
 
     val micPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->

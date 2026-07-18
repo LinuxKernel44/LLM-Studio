@@ -81,6 +81,17 @@
     <string name="settings_kokoro_download_done">Kokoro voice model downloaded and ready.</string>
     <string name="settings_kokoro_french_unavailable">Kokoro only has English voices - switch the voice language above to English (US) to use it.</string>
 
+    <string name="settings_stt_engine_label">Speech-to-text engine</string>
+    <string name="settings_stt_engine_description">Whisper is a local neural speech recognizer - fully offline, works for both French and English, and is more accurate than the system recognizer. It transcribes after you finish speaking (no live text while talking).</string>
+    <string name="settings_stt_engine_system">System (streaming, shows live text)</string>
+    <string name="settings_stt_engine_whisper">Whisper (local neural, more accurate)</string>
+    <string name="settings_download_whisper_model">Download Whisper model (~200 MB)</string>
+    <string name="settings_whisper_not_downloaded">Not downloaded yet - tap the button above to install it.</string>
+    <string name="settings_whisper_ready">✓ Downloaded and ready to use offline.</string>
+    <string name="settings_whisper_downloading">Downloading… %1$d%%</string>
+    <string name="settings_whisper_extracting">Extracting… this can take a minute or two, please wait.</string>
+    <string name="settings_whisper_download_done">Whisper model downloaded and ready.</string>
+
     <string name="settings_profile_label">Server profile</string>
     <string name="settings_profile_new">New profile</string>
     <string name="settings_profile_rename">Rename profile</string>

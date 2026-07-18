@@ -24,29 +24,19 @@ import java.util.Locale;
  * guarantee in the platform API; {@code EXTRA_PREFER_OFFLINE} is set as a best-effort hint, but
  * whether it actually stays on-device then depends on the device's default assistant/recognizer.
  */
-public class SpeechToTextHelper {
+public class SpeechToTextHelper implements SttEngine {
 
-    public interface Callback {
-        /** Mic has opened and is actively capturing audio - safe to show a "listening" UI state. */
-        void onListeningStarted();
-
-        /** Live partial transcript, useful for showing text as the user speaks. */
-        void onPartialResult(String partialText);
-
-        /** Final transcript for this session; the session is now over. */
-        void onFinalResult(String finalText);
-
-        /** Session ended with no usable speech (e.g. silence, no match, permission/engine error). */
-        void onError(String message);
+    /** Retained as an alias of {@link SttEngine.Callback} so existing references keep compiling. */
+    public interface Callback extends SttEngine.Callback {
     }
 
     private final SpeechRecognizer speechRecognizer;
     private final boolean onDeviceRecognition;
-    private final Callback callback;
+    private final SttEngine.Callback callback;
     private boolean listening = false;
     private Locale recognitionLocale = Locale.forLanguageTag("en-US");
 
-    public SpeechToTextHelper(Context context, Callback callback) {
+    public SpeechToTextHelper(Context context, SttEngine.Callback callback) {
         this.callback = callback;
         Context appContext = context.getApplicationContext();
 
@@ -97,12 +87,25 @@ public class SpeechToTextHelper {
         });
     }
 
+    /** The system recognizer is ready as soon as it's constructed (no model to load on our side). */
+    @Override
+    public boolean isReady() {
+        return true;
+    }
+
+    /** No-op: SpeechRecognizer detects end-of-speech itself, so the same session model works for
+     *  both push-to-talk and continuous - only Whisper needs the distinction (see WhisperSttEngine). */
+    @Override
+    public void setContinuousMode(boolean continuous) {
+    }
+
     /** True when recognition is guaranteed on-device (API 33+ on-device recognizer available). */
     public boolean isOnDeviceRecognition() {
         return onDeviceRecognition;
     }
 
     /** Switches which language is recognized; takes effect from the next startListening() call. */
+    @Override
     public void setRecognitionLocale(Locale locale) {
         this.recognitionLocale = locale;
     }
