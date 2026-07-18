@@ -21,7 +21,7 @@
     <string name="permission_mic_denied">Microphone permission was denied. Enable it in system settings to use voice input.</string>
 
     <string name="settings_endpoint_label">Backend URL</string>
-    <string name="settings_endpoint_hint">http://10.0.0.1:8081/v1/chat/completions</string>
+    <string name="settings_endpoint_hint">http://ip:8081/v1/chat/completions</string>
     <string name="settings_model_label">Model name (optional)</string>
     <string name="settings_model_hint">Leave blank to let the server pick</string>
     <string name="settings_system_prompt_label">System prompt</string>
