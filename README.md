@@ -52,7 +52,7 @@ speak back, and keep everything running on hardware you control.
 3. Build and run on a device or emulator (`minSdk 27`+; on-device speech recognition needs API 33+
    for the strongest offline guarantees).
 4. In the app's Settings, set the backend URL to your llama-server instance, e.g.
-   `http://<server-lan-ip>:8081/v1/chat/completions`.
+   `http://<server-ip>:8081/v1/chat/completions`.
 
 ## License
 
