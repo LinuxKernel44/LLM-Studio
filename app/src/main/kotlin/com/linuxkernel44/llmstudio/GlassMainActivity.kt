@@ -450,12 +450,16 @@ private fun GlassChatScreen(
                             } else {
                                 awaitEachGesture {
                                     awaitFirstDown()
+                                    val downAt = android.os.SystemClock.elapsedRealtime()
+                                    android.util.Log.d("MicGesture", "down")
                                     if (hasMicPermission()) {
                                         viewModel.onPushToTalkStart()
                                     } else {
                                         micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                     }
-                                    waitForUpOrCancellation()
+                                    val up = waitForUpOrCancellation()
+                                    android.util.Log.d("MicGesture", "released (up=${up != null}) after " +
+                                        "${android.os.SystemClock.elapsedRealtime() - downAt}ms")
                                     viewModel.onPushToTalkStop()
                                 }
                             }
