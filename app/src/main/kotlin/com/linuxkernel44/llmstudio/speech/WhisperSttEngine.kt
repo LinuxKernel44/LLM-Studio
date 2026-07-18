@@ -7,6 +7,7 @@ import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import com.k2fsa.sherpa.onnx.FeatureConfig
 import com.k2fsa.sherpa.onnx.OfflineModelConfig
 import com.k2fsa.sherpa.onnx.OfflineRecognizer
@@ -66,6 +67,12 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
 
     private fun loadModels() {
         try {
+            val enc = WhisperModelManager.encoderFile(appContext)
+            val dec = WhisperModelManager.decoderFile(appContext)
+            val tok = WhisperModelManager.tokensFile(appContext)
+            val vadf = WhisperModelManager.vadFile(appContext)
+            Log.d(TAG, "loadModels: encoder=${enc.exists()}(${enc.length()}) decoder=${dec.exists()}(${dec.length()}) " +
+                "tokens=${tok.exists()} vad=${vadf.exists()}")
             val config = OfflineRecognizerConfig(
                 featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
                 modelConfig = OfflineModelConfig(
@@ -97,7 +104,9 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
             vad = Vad(assetManager = null, config = vadConfig)
 
             ready = true
+            Log.d(TAG, "loadModels: recognizer + VAD loaded OK, ready=true")
         } catch (t: Throwable) {
+            Log.e(TAG, "loadModels FAILED", t)
             post { callback.onError("Speech-to-text model failed to load: ${t.message}") }
         }
     }
@@ -124,6 +133,7 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
     }
 
     override fun startListening() {
+        Log.d(TAG, "startListening: ready=$ready capturing=$capturing continuous=$continuousMode lang=$language")
         if (!ready) {
             post { callback.onError("Speech-to-text model is still loading…") }
             return
@@ -161,7 +171,9 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
 
     private fun captureLoop(continuous: Boolean) {
         val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL, ENCODING)
-        val bufferSize = if (minBuf > 0) maxOf(minBuf, VAD_WINDOW * 8) else VAD_WINDOW * 8
+        // getMinBufferSize is in bytes; PCM_16BIT = 2 bytes/sample. Keep a generous buffer.
+        val bufferSize = if (minBuf > 0) maxOf(minBuf * 2, VAD_WINDOW * 2 * 8) else VAD_WINDOW * 2 * 8
+        Log.d(TAG, "captureLoop: continuous=$continuous minBuf=$minBuf bufferSize=$bufferSize")
         val record: AudioRecord
         try {
             record = AudioRecord(
@@ -169,11 +181,13 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
                 SAMPLE_RATE, CHANNEL, ENCODING, bufferSize
             )
         } catch (t: Throwable) {
+            Log.e(TAG, "AudioRecord construction failed", t)
             capturing = false
             post { callback.onError("Microphone unavailable for on-device transcription.") }
             return
         }
         if (record.state != AudioRecord.STATE_INITIALIZED) {
+            Log.e(TAG, "AudioRecord not initialized (state=${record.state})")
             record.release()
             capturing = false
             post { callback.onError("Microphone unavailable for on-device transcription.") }
@@ -183,7 +197,9 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
 
         val theVad = vad
         theVad?.reset()
-        val window = FloatArray(VAD_WINDOW)
+        // Capture as 16-bit PCM (universally supported for AudioRecord input, unlike PCM_FLOAT which
+        // some device HALs reject) and convert to float [-1, 1] for sherpa-onnx.
+        val window = ShortArray(VAD_WINDOW)
         val collected = ArrayList<FloatArray>() // push-to-talk: all captured audio
         var segment: FloatArray? = null // continuous: the one VAD-detected utterance
         val startedAt = SystemClock.elapsedRealtime()
@@ -191,20 +207,32 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
         try {
             record.startRecording()
         } catch (t: Throwable) {
+            Log.e(TAG, "startRecording failed", t)
             record.release()
             audioRecord = null
             capturing = false
             post { callback.onError("Couldn't start the microphone.") }
             return
         }
+        Log.d(TAG, "captureLoop: recording started, recordingState=${record.recordingState}")
         post { callback.onListeningStarted() }
 
+        var totalFloats = 0
+        var reads = 0
+        var negativeReads = 0
         while (capturing && !cancelled) {
             val n = record.read(window, 0, window.size, AudioRecord.READ_BLOCKING)
             if (n <= 0) {
+                negativeReads++
+                if (n < 0) {
+                    Log.e(TAG, "AudioRecord.read error code=$n; aborting")
+                    break
+                }
                 continue
             }
-            val chunk = if (n == window.size) window.copyOf() else window.copyOf(n)
+            reads++
+            totalFloats += n
+            val chunk = FloatArray(n) { window[it] / 32768.0f }
             if (continuous && theVad != null) {
                 theVad.acceptWaveform(chunk)
                 while (!theVad.empty()) {
@@ -224,6 +252,8 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
 
         capturing = false
         stopAudioRecord()
+        Log.d(TAG, "captureLoop ended: reads=$reads badReads=$negativeReads totalFloats=$totalFloats " +
+            "segment=${segment?.size ?: -1} cancelled=$cancelled")
 
         if (cancelled) {
             return // session abandoned - deliver nothing
@@ -231,6 +261,7 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
 
         val samples = segment ?: flatten(collected)
         if (samples.isEmpty()) {
+            Log.w(TAG, "no samples captured -> 'didn't catch that'")
             post { callback.onError("Didn't catch that - please try again.") }
             return
         }
@@ -244,11 +275,14 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
             return
         }
         try {
+            val startMs = SystemClock.elapsedRealtime()
             val stream = rec.createStream()
             stream.acceptWaveform(samples, SAMPLE_RATE)
             rec.decode(stream)
             val text = rec.getResult(stream).text.trim()
             stream.release()
+            Log.d(TAG, "transcribe: ${samples.size} samples (${samples.size / SAMPLE_RATE.toFloat()}s) -> " +
+                "\"$text\" in ${SystemClock.elapsedRealtime() - startMs}ms")
             if (cancelled) {
                 return // session was abandoned while we were transcribing - drop the result
             }
@@ -258,6 +292,7 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
                 post { callback.onFinalResult(text) }
             }
         } catch (t: Throwable) {
+            Log.e(TAG, "transcribe failed", t)
             post { callback.onError("Transcription failed - please try again.") }
         }
     }
@@ -291,9 +326,10 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
     }
 
     companion object {
+        private const val TAG = "WhisperStt"
         private const val SAMPLE_RATE = 16000
         private const val CHANNEL = AudioFormat.CHANNEL_IN_MONO
-        private const val ENCODING = AudioFormat.ENCODING_PCM_FLOAT
+        private const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
         private const val VAD_WINDOW = 512 // Silero VAD's required window size at 16 kHz
         private const val MAX_LISTEN_MS = 12000L // continuous-mode safety cap when no speech occurs
     }
