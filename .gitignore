@@ -18,3 +18,13 @@ local.properties
 *.aab
 *.ap_
 *.dex
+
+# Signing/credentials - never commit these.
+*.jks
+*.keystore
+key.properties
+keystore.properties
+*.p12
+*.pem
+*.env
+google-services.json

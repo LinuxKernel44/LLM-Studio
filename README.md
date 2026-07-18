@@ -56,4 +56,11 @@ speak back, and keep everything running on hardware you control.
 
 ## License
 
-Personal project - no license has been chosen yet.
+This project's own code is released into the public domain under
+[The Unlicense](LICENSE) - use it for anything, including commercially, with
+no attribution required.
+
+A few components are vendored in or downloaded at runtime under their own
+(permissive, Apache-2.0/MIT) licenses and keep those terms regardless of the
+project's own license - see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+for the full list and license texts.
