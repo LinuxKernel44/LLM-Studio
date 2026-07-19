@@ -23,7 +23,7 @@ public class SettingsManager {
 
     public static final String DEFAULT_PROFILE_NAME = "Default";
     public static final String DEFAULT_ENDPOINT_URL = "http://10.0.0.1:8081/v1/chat/completions";
-    public static final String DEFAULT_SYSTEM_PROMPT = "You are a helpful voice assistant. Keep replies concise and conversational, since they will be read aloud.";
+    public static final String DEFAULT_SYSTEM_PROMPT = "You are a helpful voice assistant. Keep replies concise and conversational, since they will be read aloud. Always reply in the same language the user speaks to you in, and never repeat your answer in another language or add a translation in parentheses.";
     public static final long NO_ID = -1L;
 
     public static final int THEME_MODE_DYNAMIC = 0;
