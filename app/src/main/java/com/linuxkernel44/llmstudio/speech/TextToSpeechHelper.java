@@ -1,6 +1,7 @@
 package com.linuxkernel44.llmstudio.speech;
 
 import android.content.Context;
+import android.media.AudioAttributes;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 
@@ -40,6 +41,15 @@ public class TextToSpeechHelper implements TtsEngine {
         this.textToSpeech = new TextToSpeech(context.getApplicationContext(), status -> {
             if (status == TextToSpeech.SUCCESS) {
                 ready = true;
+                // Route spoken replies through the ASSISTANT audio usage so they follow the phone's
+                // assistant/AI volume category where one exists (e.g. Samsung's "Bixby/assistant"
+                // volume), matching KokoroTtsEngine's AudioTrack. Phones without a dedicated assistant
+                // stream fall back to a sensible default automatically. USAGE_ASSISTANT is API 26+,
+                // always available at our minSdk 27.
+                textToSpeech.setAudioAttributes(new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ASSISTANT)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build());
                 applyLocale(pendingLocale);
                 textToSpeech.setSpeechRate(pendingSpeechRate);
                 callback.onTtsReady();
