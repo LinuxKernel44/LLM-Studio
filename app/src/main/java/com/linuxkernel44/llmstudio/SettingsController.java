@@ -286,6 +286,11 @@ public class SettingsController {
         if (KokoroModelManager.isModelReady(activity)) {
             binding.textKokoroStatus.setText(R.string.settings_kokoro_ready);
             binding.buttonDownloadKokoro.setVisibility(View.GONE);
+            // Kokoro is the better voice, so it's the default pick whenever English is active and
+            // the model is downloaded - the user can still switch back to System for this visit.
+            if (binding.groupTtsEngine.getCheckedRadioButtonId() != R.id.radioTtsKokoro) {
+                binding.groupTtsEngine.check(R.id.radioTtsKokoro);
+            }
         } else {
             binding.textKokoroStatus.setText(R.string.settings_kokoro_not_downloaded);
             binding.buttonDownloadKokoro.setVisibility(View.VISIBLE);
@@ -311,6 +316,8 @@ public class SettingsController {
                 binding.textKokoroStatus.setText(R.string.settings_kokoro_download_done);
                 binding.buttonDownloadKokoro.setVisibility(View.GONE);
                 Snackbar.make(binding.getRoot(), R.string.settings_kokoro_download_done, Snackbar.LENGTH_SHORT).show();
+                // Now that it's ready, make it the default engine right away if English is selected.
+                refreshKokoroAvailability();
             }
 
             @Override
