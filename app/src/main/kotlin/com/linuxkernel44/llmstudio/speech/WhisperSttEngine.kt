@@ -270,10 +270,11 @@ class WhisperSttEngine(context: Context, private val callback: SttEngine.Callbac
             val stream = rec.createStream()
             stream.acceptWaveform(samples, SAMPLE_RATE)
             rec.decode(stream)
-            val text = rec.getResult(stream).text.trim()
+            val result = rec.getResult(stream)
+            val text = result.text.trim()
             stream.release()
-            Log.d(TAG, "transcribe: ${samples.size} samples (${samples.size / SAMPLE_RATE.toFloat()}s) -> " +
-                "\"$text\" in ${SystemClock.elapsedRealtime() - startMs}ms")
+            Log.d(TAG, "transcribe: ${samples.size} samples (${samples.size / SAMPLE_RATE.toFloat()}s) " +
+                "detectedLang='${result.lang}' -> \"$text\" in ${SystemClock.elapsedRealtime() - startMs}ms")
             if (cancelled) {
                 return // session was abandoned while we were transcribing - drop the result
             }
